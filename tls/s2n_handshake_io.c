@@ -66,7 +66,7 @@ static struct s2n_handshake_action state_machine[] = {
     /* message_type_t           = {Record type   Message type     Writer S2N_SERVER                S2N_CLIENT }  */
     [CLIENT_HELLO]              = {TLS_HANDSHAKE, TLS_CLIENT_HELLO, 'C', {s2n_client_hello_recv, s2n_client_hello_send}}, 
     [SERVER_HELLO]              = {TLS_HANDSHAKE, TLS_SERVER_HELLO, 'S', {s2n_server_hello_send, s2n_server_hello_recv}}, 
-    [SERVER_NEW_SESSION_TICKET] = {TLS_HANDSHAKE, TLS_SERVER_NEW_SESSION_TICKET,'S', {NULL, NULL}},     
+    [SERVER_NEW_SESSION_TICKET] = {TLS_HANDSHAKE, TLS_SERVER_NEW_SESSION_TICKET,'S', {s2n_server_nst_send, s2n_server_nst_recv}},
     [SERVER_CERT]               = {TLS_HANDSHAKE, TLS_SERVER_CERT, 'S', {s2n_server_cert_send, s2n_server_cert_recv}},
     [SERVER_CERT_STATUS]        = {TLS_HANDSHAKE, TLS_SERVER_CERT_STATUS, 'S', {s2n_server_status_send, s2n_server_status_recv}},
     [SERVER_KEY]                = {TLS_HANDSHAKE, TLS_SERVER_KEY, 'S', {s2n_server_key_send, s2n_server_key_recv}},
@@ -226,7 +226,7 @@ static message_type_t handshakes[128][16] = {
              SERVER_CHANGE_CIPHER_SPEC, SERVER_FINISHED,
              APPLICATION_DATA
      },
-     
+
      [NEGOTIATED | FULL_HANDSHAKE | PERFECT_FORWARD_SECRECY | OCSP_STATUS | CLIENT_AUTH | NO_CLIENT_CERT ] = {
              CLIENT_HELLO,
              SERVER_HELLO, SERVER_CERT, SERVER_CERT_STATUS, SERVER_KEY, SERVER_CERT_REQ, SERVER_HELLO_DONE,
@@ -309,6 +309,19 @@ int s2n_conn_set_handshake_type(struct s2n_connection *conn)
     /* If a TLS session is resumed, the Server should respond in its ServerHello with the same SessionId the Client
      * sent in the ClientHello, otherwise the Server should respond with a new SessionId. */
     if (s2n_allowed_to_cache_connection(conn)) {
+        /* First we attempt to resume with session tickets, then we fallback
+         * to attempting to resume with session caching (if enabled).
+         */
+        if (conn->config->use_tickets && conn->session_ticket_status == S2N_ATTEMPT_DECRYPT_TICKET) {
+            /* If the ticket is found to be expired during decryption, then
+             * the session ticket 'status' will be updated to reflect that
+             * the ticket must be renewed (S2N_RENEW_TICKET).
+             */
+            if (!s2n_decrypt_session_ticket(conn, &conn->client_tick_to_decrypt)) {
+                return 0;
+            }
+        }
+
         if (!s2n_resume_from_cache(conn)) {
             return 0;
         } else {

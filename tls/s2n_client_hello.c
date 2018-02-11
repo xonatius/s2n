@@ -211,6 +211,10 @@ int s2n_client_hello_recv(struct s2n_connection *conn)
         S2N_ERROR(S2N_ERR_BAD_MESSAGE);
     }
 
+    if (conn->session_ticket_status == S2N_EXPECTING_NEW_TICKET || conn->session_ticket_status == S2N_RENEW_TICKET) {
+        conn->session_id_len = 0;
+    }
+
     /* Now choose the ciphers and the cert chain. */
     GUARD(s2n_set_cipher_as_tls_server(conn, client_hello->cipher_suites.data, cipher_suites_length / 2));
     conn->server->server_cert_chain = conn->config->cert_and_key_pairs;
