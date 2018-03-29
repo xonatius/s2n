@@ -56,6 +56,12 @@ int s2n_server_hello_recv(struct s2n_connection *conn)
     conn->actual_protocol_version = MIN(conn->server_protocol_version, conn->client_protocol_version);
     conn->actual_protocol_version_established = 1;
 
+    /* Default our signature digest algorithm to SHA1. Will be used when verifying a client certificate. */
+    conn->secure.conn_hash_alg = S2N_HASH_MD5_SHA1;
+    if (conn->actual_protocol_version == S2N_TLS12 /*|| s2n_is_in_fips_mode()*/) {
+        conn->secure.conn_hash_alg = S2N_HASH_SHA1;
+    }
+
     GUARD(s2n_stuffer_read_bytes(in, conn->secure.server_random, S2N_TLS_RANDOM_DATA_LEN));
     GUARD(s2n_stuffer_read_uint8(in, &session_id_len));
 
