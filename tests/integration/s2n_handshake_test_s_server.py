@@ -105,6 +105,8 @@ def try_handshake(endpoint, port, cipher, ssl_version, server_cert=None, server_
 
     s2nc = subprocess.Popen(s2nc_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+    sys.stderr.write("\n\n>>> TEST \n s_server: {}\ns2nc: {}\n\n".format(" ".join(s_server_cmd), " ".join(s2nc_cmd)))
+
     # Read from s2nc until we get successful connection message
     found = 0
     for line in range(0, 10):

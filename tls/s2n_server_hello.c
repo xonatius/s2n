@@ -98,7 +98,7 @@ int s2n_server_hello_recv(struct s2n_connection *conn)
     conn->secure.conn_hash_alg = S2N_HASH_SHA1;
     if (conn->actual_protocol_version < S2N_TLS12 && !s2n_is_in_fips_mode()
             && conn->secure.cipher_suite->auth_method == S2N_AUTHENTICATION_RSA) {
-        /* TLS prior to 1.2 defaults for MD5 SHA1 hash if authentication is RSA */
+        /* TLS prior to 1.2 defaults to MD5 SHA1 hash if authentication is RSA */
         conn->secure.conn_hash_alg = S2N_HASH_MD5_SHA1;
     }
 
