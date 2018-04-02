@@ -41,7 +41,7 @@ def cleanup_processes(*processes):
         p.wait()
 
 
-def try_handshake(endpoint, port, cipher, ssl_version, server_cert=None, server_key=None, sig_algs=None, curves=None):
+def try_handshake(endpoint, port, cipher, ssl_version, server_cert=None, server_key=None, sig_algs=None, curves=None, dh_params=None):
     """
     Attempt to handshake against Openssl s_server listening on `endpoint` and `port` using s2nc
 
@@ -53,6 +53,7 @@ def try_handshake(endpoint, port, cipher, ssl_version, server_cert=None, server_
     :param str server_key: path to private key for Openssl s_server to use
     :param str sig_algs: Signature algorithms for Openssl s_server to accept
     :param str curves: Elliptic curves for Openssl s_server to accept
+    :param str dh_params: path to DH params for Openssl s_server to use
     :return: 0 on successfully negotiation(s), -1 on failure
     """
 
@@ -66,6 +67,8 @@ def try_handshake(endpoint, port, cipher, ssl_version, server_cert=None, server_
         server_cert = TEST_RSA_CERT
         server_key = TEST_RSA_KEY
 
+    if dh_params is None:
+        dh_params = TEST_DH_PARAMS
 
     # Start Openssl s_server
     s_server_cmd = ["openssl", "s_server", PROTO_VERS_TO_S_SERVER_ARG[ssl_version],
@@ -80,6 +83,8 @@ def try_handshake(endpoint, port, cipher, ssl_version, server_cert=None, server_
         s_server_cmd.extend(["-sigalgs", sig_algs])
     if curves is not None:
         s_server_cmd.extend(["-curves", curves])
+    if dh_params is not None:
+        s_server_cmd.extend(["-dhparam", dh_params])
 
     # Fire up s_server
     s_server = subprocess.Popen(s_server_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

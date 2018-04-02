@@ -109,6 +109,8 @@ TEST_RSA_KEY=TEST_CERT_DIRECTORY + "rsa_2048_sha256_wildcard_key.pem"
 TEST_ECDSA_CERT=TEST_CERT_DIRECTORY + "ecdsa_p384_pkcs1_cert.pem"
 TEST_ECDSA_KEY=TEST_CERT_DIRECTORY + "ecdsa_p384_pkcs1_key.pem"
 
+TEST_DH_PARAMS=TEST_CERT_DIRECTORY + "dhparams_2048.pem"
+
 # cert, key, and ocsp response for OCSP stapling tests
 TEST_OCSP_CERT_DIRECTORY="../pems/ocsp/"
 TEST_OCSP_CERT=TEST_OCSP_CERT_DIRECTORY + "server_cert.pem"
