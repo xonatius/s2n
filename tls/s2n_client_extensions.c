@@ -261,6 +261,12 @@ int s2n_parse_client_hello_server_name(struct s2n_connection *conn, struct s2n_s
 
 static int s2n_recv_client_signature_algorithms(struct s2n_connection *conn, struct s2n_stuffer *extension)
 {
+    if (conn->actual_protocol_version < S2N_TLS12) {
+        /* RFC 5246 Section-7.4.1.4.1 - Signature Algorithms extension should be ignored for
+         * TLS versions prior to TLS1.2 */
+        return 0;
+    }
+
     return s2n_recv_supported_signature_algorithms(conn, extension, &conn->handshake_params.client_sig_hash_algs);
 }
 
