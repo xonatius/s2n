@@ -727,6 +727,31 @@ int s2n_connection_get_cipher_preferences(struct s2n_connection *conn, const str
     return 0;
 }
 
+int s2n_connection_set_client_protocol_version(struct s2n_connection *conn, uint16_t protocol_version)
+{
+    notnull_check(conn);
+    S2N_ERROR_IF(conn->mode != S2N_CLIENT, S2N_ERR_CLIENT_MODE);
+    S2N_ERROR_IF(is_handshake_client_hello_sent(conn), S2N_ERR_CLIENT_HELLO_SENT);
+
+    switch (protocol_version) {
+        case S2N_SSLv3:
+            if (s2n_is_in_fips_mode()) {
+                S2N_ERROR(S2N_ERR_INVALID_PROTOCOL_VERSION);
+            }
+            /* fallthrough */
+        case S2N_TLS10:
+        case S2N_TLS11:
+        case S2N_TLS12:
+            conn->client_protocol_version = protocol_version;
+            conn->actual_protocol_version = protocol_version;
+            break;
+        default:
+            S2N_ERROR(S2N_ERR_INVALID_PROTOCOL_VERSION);
+    }
+
+    return 0;
+}
+
 int s2n_connection_get_protocol_preferences(struct s2n_connection *conn, struct s2n_blob **protocol_preferences)
 {
     notnull_check(conn);
@@ -912,6 +937,7 @@ int s2n_connection_get_alert(struct s2n_connection *conn)
 int s2n_set_server_name(struct s2n_connection *conn, const char *server_name)
 {
     S2N_ERROR_IF(conn->mode != S2N_CLIENT, S2N_ERR_CLIENT_MODE);
+    S2N_ERROR_IF(is_handshake_client_hello_sent(conn), S2N_ERR_CLIENT_HELLO_SENT);
 
     int len = strlen(server_name);
     S2N_ERROR_IF(len > 255, S2N_ERR_SERVER_NAME_TOO_LONG);
@@ -1023,6 +1049,8 @@ const uint8_t *s2n_connection_get_ocsp_response(struct s2n_connection *conn, uin
 
 int s2n_connection_prefer_throughput(struct s2n_connection *conn)
 {
+    notnull_check(conn);
+
     if (!conn->mfl_code) {
         conn->max_outgoing_fragment_length = S2N_LARGE_FRAGMENT_LENGTH;
     }
@@ -1032,6 +1060,8 @@ int s2n_connection_prefer_throughput(struct s2n_connection *conn)
 
 int s2n_connection_prefer_low_latency(struct s2n_connection *conn)
 {
+    notnull_check(conn);
+
     if (!conn->mfl_code) {
         conn->max_outgoing_fragment_length = S2N_SMALL_FRAGMENT_LENGTH;
     }

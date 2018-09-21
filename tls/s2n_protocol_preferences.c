@@ -55,5 +55,6 @@ int s2n_config_set_protocol_preferences(struct s2n_config *config, const char *c
 
 int s2n_connection_set_protocol_preferences(struct s2n_connection *conn, const char * const *protocols, int protocol_count)
 {
+    S2N_ERROR_IF(is_handshake_client_hello_sent(conn), S2N_ERR_CLIENT_HELLO_SENT);
     return s2n_blob_set_protocol_preferences(&conn->application_protocols_overridden, protocols, protocol_count);
 }

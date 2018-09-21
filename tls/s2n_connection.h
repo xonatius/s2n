@@ -38,6 +38,7 @@
 
 #define S2N_TLS_PROTOCOL_VERSION_LEN    2
 
+#define is_handshake_client_hello_sent(conn) (CLIENT_HELLO != s2n_conn_get_current_message_type(conn))
 #define is_handshake_complete(conn) (APPLICATION_DATA == s2n_conn_get_current_message_type(conn))
 
 typedef enum {
