@@ -70,6 +70,8 @@ void usage()
     fprintf(stderr, "    Set dynamic record resize threshold\n");
     fprintf(stderr, "  -t,--timeout\n");
     fprintf(stderr, "    Set dynamic record timeout threshold\n");
+    fprintf(stderr, "  -p,--protocol-version\n");
+    fprintf(stderr, "    Set protocol version we will use to make a handshake. Availible values: ssl3, tls1, tls1.1, tls1.2\n");
     fprintf(stderr, "\n");
     exit(1);
 }
@@ -235,6 +237,7 @@ int main(int argc, char *const *argv)
     struct verify_data unsafe_verify_data;
     const char *port = "443";
     int echo_input = 0;
+    uint16_t protocol_version = 0;
 
     static struct option long_options[] = {
         {"alpn", required_argument, 0, 'a'},
@@ -251,10 +254,11 @@ int main(int argc, char *const *argv)
         {"no-session-ticket", no_argument, 0, 'T'},
         {"Dynamic", required_argument, 0, 'D'},
         {"timeout", required_argument, 0, 't'},
+        {"protocol-version", required_argument, 0, 'p'},
     };
     while (1) {
         int option_index = 0;
-        int c = getopt_long(argc, argv, "a:c:ehn:sf:d:D:t:irT", long_options, &option_index);
+        int c = getopt_long(argc, argv, "a:c:ehn:sf:d:D:t:irTp:", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -301,7 +305,22 @@ int main(int argc, char *const *argv)
         case 'D':
             dyn_rec_threshold = strtoul(optarg, 0, 10);
             if (errno == ERANGE) {
-              dyn_rec_threshold = 0;      
+              dyn_rec_threshold = 0;
+            }
+            break;
+        case 'p':
+            if (strcasecmp(optarg, "ssl3") == 0) {
+                protocol_version = S2N_SSLv3;
+            } else if (strcasecmp(optarg, "tls1") == 0) {
+                protocol_version = S2N_TLS10;
+            } else if (strcasecmp(optarg, "tls1.1") == 0) {
+                protocol_version = S2N_TLS11;
+            } else if (strcasecmp(optarg, "tls1.2") == 0) {
+                protocol_version = S2N_TLS12;
+            } else {
+                fprintf(stderr, "Unknown option in -p (--protocol-version): %s\n", optarg);
+                usage();
+                break;
             }
             break;
         case '?':
@@ -409,6 +428,11 @@ int main(int argc, char *const *argv)
         /* Update session state in connection if exists */
         if (session_state_length > 0 && s2n_connection_set_session(conn, session_state, session_state_length) < 0) {
             print_s2n_error("Error setting session state in connection");
+            exit(1);
+        }
+
+        if (protocol_version && s2n_connection_set_client_protocol_version(conn, protocol_version) < 0) {
+            print_s2n_error("s2n_connection_set_client_protocol_version() failed");
             exit(1);
         }
 
