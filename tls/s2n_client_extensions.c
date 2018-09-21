@@ -63,6 +63,11 @@ static int s2n_send_client_signature_algorithms_extension(struct s2n_connection 
 
 int s2n_client_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *out)
 {
+    /* Don't send extensions for SSLv3 */
+    if (conn->actual_protocol_version == S2N_SSLv3) {
+        return 0;
+    }
+
     uint16_t total_size = 0;
     uint16_t num_signature_algs = sizeof(s2n_preferred_signature_algorithms) / sizeof(s2n_preferred_signature_algorithms[0]);
 

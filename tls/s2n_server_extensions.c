@@ -37,6 +37,11 @@ static int s2n_recv_server_session_ticket_ext(struct s2n_connection *conn, struc
 
 int s2n_server_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *out)
 {
+    /* Don't send extensions for SSLv3 */
+    if (conn->actual_protocol_version == S2N_SSLv3) {
+        return 0;
+    }
+
     uint16_t total_size = 0;
 
     uint8_t application_protocol_len = strlen(conn->application_protocol);
