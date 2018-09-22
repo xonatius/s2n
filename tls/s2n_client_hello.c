@@ -365,7 +365,8 @@ int s2n_client_hello_send(struct s2n_connection *conn)
      */
     uint16_t num_available_suites = 0;
     for (int i = 0; i < cipher_preferences->count; i++) {
-        if (cipher_preferences->suites[i]->available) {
+        struct s2n_cipher_suite *cipher = cipher_preferences->suites[i];
+        if (cipher->available && cipher->minimum_required_tls_version <= conn->client_protocol_version) {
             num_available_suites++;
         }
     }
@@ -377,8 +378,9 @@ int s2n_client_hello_send(struct s2n_connection *conn)
 
     /* Now, write the IANA values every available cipher suite in our list */
     for (int i = 0; i < cipher_preferences->count; i++ ) {
-        if (cipher_preferences->suites[i]->available) {
-            GUARD(s2n_stuffer_write_bytes(out, cipher_preferences->suites[i]->iana_value, S2N_TLS_CIPHER_SUITE_LEN));
+        struct s2n_cipher_suite *cipher = cipher_preferences->suites[i];
+        if (cipher->available && cipher->minimum_required_tls_version <= conn->client_protocol_version) {
+            GUARD(s2n_stuffer_write_bytes(out, cipher->iana_value, S2N_TLS_CIPHER_SUITE_LEN));
         }
     }
     /* Lastly, write TLS_EMPTY_RENEGOTIATION_INFO_SCSV so that server knows it's an initial handshake (RFC5746 Section 3.4) */
