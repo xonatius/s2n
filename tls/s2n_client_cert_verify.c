@@ -17,6 +17,7 @@
 
 #include "error/s2n_errno.h"
 
+#include "tls/s2n_async_pkey.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_config.h"
 #include "tls/s2n_signature_algorithms.h"
@@ -26,6 +27,7 @@
 
 #include "utils/s2n_safety.h"
 
+static int s2n_client_cert_sign_complete(struct s2n_connection *conn, struct s2n_blob *signature);
 
 int s2n_client_cert_verify_recv(struct s2n_connection *conn)
 {
@@ -59,6 +61,8 @@ int s2n_client_cert_verify_recv(struct s2n_connection *conn)
 
 int s2n_client_cert_verify_send(struct s2n_connection *conn)
 {
+    S2N_ASYNC_PKEY_GUARD(conn);
+
     struct s2n_stuffer *out = &conn->handshake.io;
 
     struct s2n_signature_scheme chosen_sig_scheme = s2n_rsa_pkcs1_md5_sha1;
@@ -73,14 +77,15 @@ int s2n_client_cert_verify_send(struct s2n_connection *conn)
     GUARD(s2n_handshake_get_hash_state(conn, chosen_sig_scheme.hash_alg, &hash_state));
     GUARD(s2n_hash_copy(&conn->handshake.ccv_hash_copy, &hash_state));
 
-    struct s2n_cert_chain_and_key *cert_chain_and_key = conn->handshake_params.our_chain_and_key;
-    struct s2n_blob signature = {0};
-    signature.size = s2n_pkey_size(cert_chain_and_key->private_key);
-    GUARD(s2n_stuffer_write_uint16(out, signature.size));
-    signature.data = s2n_stuffer_raw_write(out, signature.size);
-    notnull_check(signature.data);
+    S2N_ASYNC_PKEY_SIGN(conn, chosen_sig_scheme.sig_alg, &conn->handshake.ccv_hash_copy, s2n_client_cert_sign_complete);
+}
 
-    GUARD(s2n_pkey_sign(cert_chain_and_key->private_key, chosen_sig_scheme.sig_alg, &conn->handshake.ccv_hash_copy, &signature));
+int s2n_client_cert_sign_complete(struct s2n_connection *conn, struct s2n_blob *signature)
+{
+    struct s2n_stuffer *out = &conn->handshake.io;
+
+    GUARD(s2n_stuffer_write_uint16(out, signature->size));
+    GUARD(s2n_stuffer_write_bytes(out, signature->data, signature->size));
 
     /* Client certificate has been verified. Minimize required handshake hash algs */
     GUARD(s2n_conn_update_required_handshake_hashes(conn));
