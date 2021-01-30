@@ -166,6 +166,11 @@ struct s2n_handshake {
 
     /* Set to 1 if the RSA verification failed */
     unsigned rsa_failed:1;
+
+    /* Certificate compression Algorithms support (RFC8879) */
+    unsigned certificate_compression_zlib:1;
+    unsigned certificate_compression_brotli:1;
+    unsigned certificate_compression_zstd:1;
 };
 
 extern message_type_t s2n_conn_get_current_message_type(struct s2n_connection *conn);

@@ -111,6 +111,9 @@ struct s2n_connection {
     /* If write fd is broken */
     unsigned write_fd_broken:1;
 
+    /* Key update data */
+    unsigned key_update_pending:1;
+
     /* Track request extensions to ensure correct response extension behavior.
      *
      * We need to track client and server extensions separately because some
@@ -315,9 +318,6 @@ struct s2n_connection {
 
     /* Cookie extension data */
     struct s2n_stuffer cookie_stuffer;
-
-    /* Key update data */
-    unsigned key_update_pending:1;
 
     /* Bitmap to represent preferred list of keyshare for client to generate and send keyshares in the ClientHello message.
      * The least significant bit (lsb), if set, indicates that the client must send an empty keyshare list.

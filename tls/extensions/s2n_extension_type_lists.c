@@ -28,6 +28,7 @@
 #include "tls/extensions/s2n_client_status_request.h"
 #include "tls/extensions/s2n_client_key_share.h"
 #include "tls/extensions/s2n_client_sct_list.h"
+#include "tls/extensions/s2n_client_compress_certificate.h"
 #include "tls/extensions/s2n_client_supported_groups.h"
 #include "tls/extensions/s2n_client_pq_kem.h"
 #include "tls/extensions/s2n_client_psk.h"
@@ -57,6 +58,7 @@ static const s2n_extension_type *const client_hello_extensions[] = {
         &s2n_client_alpn_extension,
         &s2n_client_status_request_extension,
         &s2n_client_sct_list_extension,
+        &s2n_client_compress_certificate_extension,
         &s2n_client_max_frag_len_extension,
         &s2n_client_session_ticket_extension,
         &s2n_client_supported_groups_extension,

@@ -100,6 +100,7 @@
 #define TLS_EXTENSION_SIGNATURE_ALGORITHMS 13
 #define TLS_EXTENSION_ALPN                 16
 #define TLS_EXTENSION_SCT_LIST             18
+#define TLS_EXTENSION_COMPRESS_CERTIFICATE 27
 #define TLS_EXTENSION_SESSION_TICKET       35
 #define TLS_EXTENSION_PRE_SHARED_KEY       41
 #define TLS_EXTENSION_CERT_AUTHORITIES     47
@@ -111,6 +112,11 @@
 #define TLS_EXTENSION_COOKIE                 44
 #define TLS_EXTENSION_PSK_KEY_EXCHANGE_MODES 45
 #define TLS_EXTENSION_KEY_SHARE              51
+
+/* TLS Certificate Compression Algorithms from https://tools.ietf.org/html/rfc8879#section-7.3 */
+#define TLS_CERTIFICATE_COMPRESSION_ZLIB     1
+#define TLS_CERTIFICATE_COMPRESSION_BROTLI   2
+#define TLS_CERTIFICATE_COMPRESSION_ZSTD     3
 
 /* TLS 1.3 pre-shared key exchange modes from https://tools.ietf.org/html/rfc8446#section-4.2.9 */
 #define TLS_PSK_KE_MODE     0
