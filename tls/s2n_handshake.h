@@ -45,6 +45,7 @@
 #define TLS_SERVER_CERT_STATUS        22
 #define TLS_SERVER_SESSION_LOOKUP     23
 #define TLS_KEY_UPDATE                24
+#define TLS_COMPRESSED_CERTIFICATE    25
 #define TLS_MESSAGE_HASH             254
 
 /* This is the list of message types that we support */
@@ -70,6 +71,7 @@ typedef enum {
     SERVER_CERT_VERIFY,
     HELLO_RETRY_MSG,
     END_OF_EARLY_DATA,
+    SERVER_COMPRESSED_CERT,
 
     APPLICATION_DATA,
 } message_type_t;

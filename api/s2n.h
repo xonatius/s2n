@@ -167,6 +167,14 @@ typedef enum {
     S2N_TLS_MAX_FRAG_LEN_4096 = 4,
 } s2n_max_frag_len;
 
+typedef enum {
+    S2N_COMPRESSED_CERT_NONE,
+    S2N_COMPRESSED_CERT_ZLIB,
+    S2N_COMPRESSED_CERT_BROTLI,
+    S2N_COMPRESSED_CERT_ZSTD,
+    S2N_COMPRESSED_CERT_LAST
+} s2n_compressed_cert_alg;
+
 struct s2n_cert_chain_and_key;
 struct s2n_pkey;
 typedef struct s2n_pkey s2n_cert_public_key;

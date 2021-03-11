@@ -17,10 +17,13 @@
 
 #include "error/s2n_errno.h"
 
+#include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_auth_selection.h"
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_tls.h"
 
+#include "tls/s2n_tls_parameters.h"
+#include "utils/s2n_blob.h"
 #include "utils/s2n_safety.h"
 
 int s2n_server_cert_recv(struct s2n_connection *conn)
@@ -51,6 +54,53 @@ int s2n_server_cert_recv(struct s2n_connection *conn)
     POSIX_GUARD(s2n_is_cert_type_valid_for_auth(conn, actual_cert_pkey_type));
     POSIX_GUARD(s2n_pkey_setup_for_type(&public_key, actual_cert_pkey_type));
     conn->secure.server_public_key = public_key;
+
+    return 0;
+}
+
+int s2n_server_compressed_cert_send(struct s2n_connection *conn)
+{
+    /* Only supported with TLS1.3*/
+    if (conn->actual_protocol_version < S2N_TLS13) {
+        return 0;
+    }
+
+    struct s2n_cert_chain_and_key *chain_and_key = conn->handshake_params.our_chain_and_key;
+    S2N_ERROR_IF(chain_and_key == NULL, S2N_ERR_CERT_TYPE_UNSUPPORTED);
+
+    /* TODO: Select the smallest compresison in terms of bytes */
+    s2n_compressed_cert_alg alg = S2N_COMPRESSED_CERT_NONE;
+    if (conn->handshake.certificate_compression_zstd) {
+        alg = S2N_COMPRESSED_CERT_ZSTD;
+    } else if (conn->handshake.certificate_compression_brotli) {
+        alg = S2N_COMPRESSED_CERT_BROTLI;
+    } else if (conn->handshake.certificate_compression_zlib) {
+        alg = S2N_COMPRESSED_CERT_ZLIB;
+    } else {
+        /* TODO: skip this message? */
+        return 0;
+    }
+
+    if (chain_and_key->compressed_cert[alg].size == 0) {
+        // allocate
+    }
+
+    switch (alg) {
+        case S2N_COMPRESSED_CERT_ZLIB:
+            s2n_stuffer_write_uint16(&conn->handshake.io, TLS_CERTIFICATE_COMPRESSION_ZLIB);
+            break;
+        case S2N_COMPRESSED_CERT_BROTLI:
+            s2n_stuffer_write_uint16(&conn->handshake.io, TLS_CERTIFICATE_COMPRESSION_BROTLI);
+            break;
+        case S2N_COMPRESSED_CERT_ZSTD:
+            s2n_stuffer_write_uint16(&conn->handshake.io, TLS_CERTIFICATE_COMPRESSION_ZSTD);
+            break;
+        default:
+            S2N_ERROR(S2N_ERR_SAFETY);
+    }
+
+    s2n_stuffer_write_uint24(&conn->handshake.io, chain_and_key->cert_message_size);
+    s2n_stuffer_write(&conn->handshake.io, &chain_and_key->compressed_cert[alg]);
 
     return 0;
 }

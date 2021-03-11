@@ -42,6 +42,8 @@ struct s2n_cert_chain_and_key {
     s2n_cert_private_key *private_key;
     struct s2n_blob ocsp_status;
     struct s2n_blob sct_list;
+    struct s2n_blob compressed_cert[S2N_COMPRESSED_CERT_LAST];
+    uint32_t cert_message_size;
     /* DNS type SubjectAlternative names from the leaf certificate to match
      * with the server_name extension. We ignore non-DNS SANs here since the
      * server_name extension only supports DNS.
